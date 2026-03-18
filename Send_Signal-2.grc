@@ -6,7 +6,7 @@ options:
     cmake_opt: ''
     comment: ''
     copyright: ''
-    description: 'BPSK Pluto Transmitter - reads bits from file'
+    description: BPSK Pluto Transmitter - reads bits from file
     gen_cmake: 'On'
     gen_linking: dynamic
     generate_options: qt_gui
@@ -33,19 +33,18 @@ options:
     state: enabled
 
 blocks:
-- name: samp_rate
+- name: bit_file
   id: variable
   parameters:
-    comment: ''
-    value: '250000'
+    comment: Change this to use a different bit file
+    value: '"bit_tests/bits_000.bin"'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [184, 12]
+    coordinate: [632, 12]
     rotation: 0
     state: enabled
-
 - name: center_freq
   id: variable
   parameters:
@@ -58,20 +57,18 @@ blocks:
     coordinate: [296, 12]
     rotation: 0
     state: enabled
-
-- name: symbol_rate
+- name: samp_rate
   id: variable
   parameters:
     comment: ''
-    value: '10000'
+    value: '250000'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [408, 12]
+    coordinate: [184, 12]
     rotation: 0
     state: enabled
-
 - name: sps
   id: variable
   parameters:
@@ -84,25 +81,25 @@ blocks:
     coordinate: [520, 12]
     rotation: 0
     state: enabled
-
-- name: bit_file
+- name: symbol_rate
   id: variable
   parameters:
-    comment: 'Change this to use a different bit file'
-    value: '"bit_tests/bits_000.bin"'
+    comment: ''
+    value: '10000'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [632, 12]
+    coordinate: [408, 12]
     rotation: 0
     state: enabled
-
 - name: blocks_file_source_0
   id: blocks_file_source
   parameters:
+    affinity: ''
+    alias: ''
     begin_tag: pmt.PMT_NIL
-    comment: 'Reads uint8 bits (0 or 1) from file'
+    comment: Reads uint8 bits (0 or 1) from file
     file: bit_file
     length: '0'
     maxoutbuf: '0'
@@ -115,50 +112,15 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [56, 220]
+    coordinate: [120, 216.0]
     rotation: 0
     state: enabled
-
-- name: digital_chunks_to_symbols_xx_0
-  id: digital_chunks_to_symbols_xx
-  parameters:
-    comment: 'BPSK mapping: 0 -> -1+0j, 1 -> +1+0j'
-    dimension: '1'
-    in_type: byte
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    num_ports: '1'
-    out_type: complex
-    symbol_table: '[-1+0j, 1+0j]'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [312, 240]
-    rotation: 0
-    state: enabled
-
-- name: blocks_repeat_0
-  id: blocks_repeat
-  parameters:
-    comment: 'Hold each symbol for sps samples'
-    interp: sps
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    type: complex
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [560, 244]
-    rotation: 0
-    state: enabled
-
 - name: blocks_multiply_const_vxx_0
   id: blocks_multiply_const_vxx
   parameters:
-    comment: 'Scale to avoid clipping'
+    affinity: ''
+    alias: ''
+    comment: Scale to avoid clipping
     const: '0.5'
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -171,15 +133,54 @@ blocks:
     coordinate: [752, 244]
     rotation: 0
     state: enabled
-
+- name: blocks_repeat_0
+  id: blocks_repeat
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Hold each symbol for sps samples
+    interp: sps
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [560, 244]
+    rotation: 0
+    state: enabled
+- name: digital_chunks_to_symbols_xx_0
+  id: digital_chunks_to_symbols_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: 'BPSK mapping: 0 -> -1+0j, 1 -> +1+0j'
+    dimension: '1'
+    in_type: byte
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_ports: '1'
+    out_type: complex
+    symbol_table: '[-1+0j, 1+0j]'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [360, 236.0]
+    rotation: 0
+    state: enabled
 - name: soapy_plutosdr_sink_0
   id: soapy_plutosdr_sink
   parameters:
+    affinity: ''
+    alias: ''
     bandwidth: samp_rate
     center_freq: center_freq
     comment: ''
     dev_args: ''
-    gain: '20'
+    gain: '40'
     samp_rate: samp_rate
     type: fc32
   states:
@@ -192,9 +193,9 @@ blocks:
 
 connections:
 - [blocks_file_source_0, '0', digital_chunks_to_symbols_xx_0, '0']
-- [digital_chunks_to_symbols_xx_0, '0', blocks_repeat_0, '0']
-- [blocks_repeat_0, '0', blocks_multiply_const_vxx_0, '0']
 - [blocks_multiply_const_vxx_0, '0', soapy_plutosdr_sink_0, '0']
+- [blocks_repeat_0, '0', blocks_multiply_const_vxx_0, '0']
+- [digital_chunks_to_symbols_xx_0, '0', blocks_repeat_0, '0']
 
 metadata:
   file_format: 1
