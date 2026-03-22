@@ -68,26 +68,9 @@ e(n) = Re{ x^(n-1) * y(n) - x^(n) * y(n-1) }
 - Any error in synchronization or channel estimation propagates to bit errors
 
 ## 3. Observations / Notes
-
-### 3.1 Effects of Imperfect Processing
-
-| Error Type | Symptom | Result |
-|-----------|---------|--------|
-| Sync error | Symbols misaligned in time or spinning in phase | Lost information; many bit errors |
-| Channel estimate error | Symbols offset in amplitude/phase | Some symbols decoded incorrectly |
-
-### 3.2 Visual Indicators on PlutoSDR
-
-Constellation plot:
-
-- Two tight clusters on real axis -> BPSK properly synchronized and equalized
-- Spinning -> Costas loop not locked
-- Smeared -> clock recovery not locked
-
-Time-domain plot:
-
-- Rectangular wave jumping +/-1 -> ideal BPSK after clock recovery
-- Variations in amplitude -> channel distortion
+Idea of a "reference sinusoid"
+ - Multiplied against to the recieved signal...part of the downcoversion process discussed in lecture 3
+ - Frequency and phase offset affect reference sinusoid, thus Costas loop is implemented on said reference in some way
 
 ## 4. Implementation Details (Mar 18th)
 
@@ -96,8 +79,6 @@ Time-domain plot:
 - Phase/Frequency recovery: Costas loop
 - Order = 2
 - Loop BW = 0.028
-- Output: `received_symbols.bin` (1 complex value per symbol)
-- Optional: `received_iq_raw.bin` for offline debugging
 
 ### 4.1 Python/GNU Radio Setup
 
