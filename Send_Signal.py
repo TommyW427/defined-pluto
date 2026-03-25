@@ -85,7 +85,7 @@ class Send_Signal(gr.top_block, Qt.QWidget):
         self.soapy_plutosdr_sink_0.set_sample_rate(0, samp_rate)
         self.soapy_plutosdr_sink_0.set_bandwidth(0, samp_rate)
         self.soapy_plutosdr_sink_0.set_frequency(0, center_freq)
-        self.soapy_plutosdr_sink_0.set_gain(0, min(max(40, 0.0), 89.0))
+        self.soapy_plutosdr_sink_0.set_gain(0, min(max(50, 0.0), 89.0))
         self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bc([-1+0j, 1+0j], 1)
         self.blocks_repeat_0 = blocks.repeat(gr.sizeof_gr_complex*1, sps)
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_cc(0.5)
