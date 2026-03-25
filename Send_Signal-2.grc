@@ -130,7 +130,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [752, 244]
+    coordinate: [568, 172.0]
     rotation: 0
     state: enabled
 - name: blocks_repeat_0
@@ -148,7 +148,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [560, 244]
+    coordinate: [448, 260.0]
     rotation: 0
     state: enabled
 - name: digital_chunks_to_symbols_xx_0
@@ -168,7 +168,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [360, 236.0]
+    coordinate: [296, 140.0]
     rotation: 0
     state: enabled
 - name: soapy_plutosdr_sink_0
@@ -180,14 +180,14 @@ blocks:
     center_freq: center_freq
     comment: ''
     dev_args: ''
-    gain: '40'
+    gain: '50'
     samp_rate: samp_rate
     type: fc32
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [968, 220]
+    coordinate: [840, 228.0]
     rotation: 0
     state: enabled
 

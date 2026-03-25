@@ -106,7 +106,7 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         tune_args = ['']
         settings = ['']
 
-        self.soapy_plutosdr_source_0 = soapy.source(dev, "fc32", 1, '',
+        self.soapy_plutosdr_source_0 = soapy.source(dev, "fc32", 1, "device='plutosdr'",
                                   stream_args, tune_args, settings)
         self.soapy_plutosdr_source_0.set_sample_rate(0, samp_rate)
         self.soapy_plutosdr_source_0.set_bandwidth(0, samp_rate)
@@ -314,9 +314,9 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.set_sps(int(self.samp_rate // self.symbol_rate))
+        self.qtgui_freq_sink_x_0.set_frequency_range(self.center_freq, self.samp_rate)
         self.soapy_plutosdr_source_0.set_sample_rate(0, self.samp_rate)
         self.soapy_plutosdr_source_0.set_bandwidth(0, self.samp_rate)
-        self.qtgui_freq_sink_x_0.set_frequency_range(self.center_freq, self.samp_rate)
 
     def get_sps(self):
         return self.sps
@@ -351,8 +351,8 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
 
     def set_center_freq(self, center_freq):
         self.center_freq = center_freq
-        self.soapy_plutosdr_source_0.set_frequency(0, self.center_freq)
         self.qtgui_freq_sink_x_0.set_frequency_range(self.center_freq, self.samp_rate)
+        self.soapy_plutosdr_source_0.set_frequency(0, self.center_freq)
 
 
 

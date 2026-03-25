@@ -4,9 +4,11 @@ options:
     catch_exceptions: 'True'
     category: '[GRC Hier Blocks]'
     cmake_opt: ''
-    comment: 'BPSK receiver with frequency sync (Costas loop) and clock recovery (Mueller & Mueller). Output file contains 1 complex sample per symbol, ready for MMSE or DEFINED.'
+    comment: BPSK receiver with frequency sync (Costas loop) and clock recovery (Mueller
+      & Mueller). Output file contains 1 complex sample per symbol, ready for MMSE
+      or DEFINED.
     copyright: ''
-    description: 'BPSK PlutoSDR Receiver with M&M Clock Recovery'
+    description: BPSK PlutoSDR Receiver with M&M Clock Recovery
     gen_cmake: 'On'
     gen_linking: dynamic
     generate_options: qt_gui
@@ -33,30 +35,10 @@ options:
     state: enabled
 
 blocks:
-
-# ═══════════════════════════════════════════════════════════════
-#  VARIABLES
-# ═══════════════════════════════════════════════════════════════
-
-# Sample rate: must match the transmitter (250 kHz).
-- name: samp_rate
-  id: variable
-  parameters:
-    comment: 'Must match transmitter sample rate'
-    value: '250000'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [184, 12]
-    rotation: 0
-    state: enabled
-
-# Center frequency: must match the transmitter (915 MHz).
 - name: center_freq
   id: variable
   parameters:
-    comment: 'Must match transmitter center frequency'
+    comment: Must match transmitter center frequency
     value: 915e6
   states:
     bus_sink: false
@@ -65,91 +47,10 @@ blocks:
     coordinate: [296, 12]
     rotation: 0
     state: enabled
-
-# Symbol rate: must match the transmitter (10 kHz).
-# The transmitter holds each BPSK symbol for sps=25 samples.
-- name: symbol_rate
-  id: variable
-  parameters:
-    comment: 'Must match transmitter symbol rate'
-    value: '10000'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [408, 12]
-    rotation: 0
-    state: enabled
-
-# Samples per symbol = sample_rate / symbol_rate = 250000/10000 = 25.
-# Each transmitted BPSK symbol occupies 25 consecutive samples.
-- name: sps
-  id: variable
-  parameters:
-    comment: 'samp_rate / symbol_rate = 25 samples per symbol'
-    value: int(samp_rate // symbol_rate)
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [520, 12]
-    rotation: 0
-    state: enabled
-
-# RX gain slider: adjustable 0-73 dB while running.
-- name: rx_gain
-  id: variable_qtgui_range
-  parameters:
-    comment: 'Adjust to get clean constellation without clipping'
-    gui_hint: 0,0,1,1
-    label: RX Gain (dB)
-    min_len: '200'
-    orient: QtCore.Qt.Horizontal
-    rangeType: float
-    start: '0'
-    step: '1'
-    stop: '73'
-    value: '40'
-    widget: counter_slider
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [632, 12]
-    rotation: 0
-    state: enabled
-
-# Costas loop bandwidth slider.
-# Controls how fast frequency/phase tracking adapts.
-# 2*pi/100 ≈ 0.0628 is a typical starting value.
-- name: costas_bw
-  id: variable_qtgui_range
-  parameters:
-    comment: 'Frequency sync speed. Increase if constellation spins.'
-    gui_hint: 0,1,1,1
-    label: Costas Loop BW
-    min_len: '200'
-    orient: QtCore.Qt.Horizontal
-    rangeType: float
-    start: '0.001'
-    step: '0.001'
-    stop: '0.2'
-    value: '0.0628'
-    widget: counter_slider
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [808, 12]
-    rotation: 0
-    state: enabled
-
-# Clock recovery loop bandwidth slider.
-# Controls how fast symbol timing adapts.
 - name: clock_bw
   id: variable_qtgui_range
   parameters:
-    comment: 'Clock recovery speed. Adjust if symbols are smeared.'
+    comment: Clock recovery speed. Adjust if symbols are smeared.
     gui_hint: 0,2,1,1
     label: Clock Recovery BW
     min_len: '200'
@@ -167,20 +68,465 @@ blocks:
     coordinate: [984, 12]
     rotation: 0
     state: enabled
-
-# ═══════════════════════════════════════════════════════════════
-#  SIGNAL PROCESSING BLOCKS
-# ═══════════════════════════════════════════════════════════════
-
-# PlutoSDR source: receives RF at 915 MHz, outputs complex
-# baseband IQ at 250 kHz sample rate.
+- name: costas_bw
+  id: variable_qtgui_range
+  parameters:
+    comment: Frequency sync speed. Increase if constellation spins.
+    gui_hint: 0,1,1,1
+    label: Costas Loop BW
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0.001'
+    step: '0.001'
+    stop: '0.2'
+    value: '0.0628'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [808, 12]
+    rotation: 0
+    state: enabled
+- name: rx_gain
+  id: variable_qtgui_range
+  parameters:
+    comment: Adjust to get clean constellation without clipping
+    gui_hint: 0,0,1,1
+    label: RX Gain (dB)
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0'
+    step: '1'
+    stop: '73'
+    value: '40'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [632, 12]
+    rotation: 0
+    state: enabled
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: Must match transmitter sample rate
+    value: '250000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [184, 12]
+    rotation: 0
+    state: enabled
+- name: sps
+  id: variable
+  parameters:
+    comment: samp_rate / symbol_rate = 25 samples per symbol
+    value: int(samp_rate // symbol_rate)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [520, 12]
+    rotation: 0
+    state: enabled
+- name: symbol_rate
+  id: variable
+  parameters:
+    comment: Must match transmitter symbol rate
+    value: '10000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [408, 12]
+    rotation: 0
+    state: enabled
+- name: analog_agc_xx_0
+  id: analog_agc_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Normalizes amplitude to 1.0 for consistent sync performance
+    gain: '1.0'
+    max_gain: '65536'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    rate: 1e-4
+    reference: '1.0'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [320, 228]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_raw
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: Raw IQ before any synchronization (for debugging)
+    file: received_iq_raw.bin
+    type: complex
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [320, 388]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_symbols
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: 'Output: 1 complex sample per symbol, ready for detection'
+    file: received_symbols.bin
+    type: complex
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1024, 196.0]
+    rotation: 0
+    state: enabled
+- name: digital_costas_loop_cc_0
+  id: digital_costas_loop_cc
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Removes freq/phase offset. Order=2 for BPSK.
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    order: '2'
+    use_snr: 'False'
+    w: costas_bw
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [560, 196.0]
+    rotation: 0
+    state: enabled
+- name: digital_symbol_sync_xx_0
+  id: digital_symbol_sync_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Mueller & Mueller clock recovery. Outputs 1 sample/symbol.
+    constellation: digital.constellation_bpsk().base()
+    damping: '1.0'
+    loop_bw: clock_bw
+    max_dev: '1.5'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    nfilters: '128'
+    osps: '1'
+    pfb_mf_taps: '[]'
+    resamp_type: digital.IR_MMSE_8TAP
+    sps: sps
+    ted_gain: '1.0'
+    ted_type: digital.TED_MUELLER_AND_MULLER
+    type: cc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [752, 188.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_const_sink_x_0
+  id: qtgui_const_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'False'
+    axislabels: 'True'
+    color1: '"blue"'
+    color10: '"dark blue"'
+    color2: '"red"'
+    color3: '"green"'
+    color4: '"black"'
+    color5: '"cyan"'
+    color6: '"magenta"'
+    color7: '"yellow"'
+    color8: '"dark red"'
+    color9: '"dark green"'
+    comment: "Should show two clusters at \xB11 on real axis for BPSK"
+    grid: 'True'
+    gui_hint: 1,0,1,2
+    label1: ''
+    label10: ''
+    label2: ''
+    label3: ''
+    label4: ''
+    label5: ''
+    label6: ''
+    label7: ''
+    label8: ''
+    label9: ''
+    legend: 'True'
+    marker1: '0'
+    marker10: '0'
+    marker2: '0'
+    marker3: '0'
+    marker4: '0'
+    marker5: '0'
+    marker6: '0'
+    marker7: '0'
+    marker8: '0'
+    marker9: '0'
+    name: After Clock Recovery
+    nconnections: '1'
+    size: '1024'
+    style1: '0'
+    style10: '0'
+    style2: '0'
+    style3: '0'
+    style4: '0'
+    style5: '0'
+    style6: '0'
+    style7: '0'
+    style8: '0'
+    style9: '0'
+    tr_chan: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    xmax: '2'
+    xmin: '-2'
+    ymax: '2'
+    ymin: '-2'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1040, 356.0]
+    rotation: 0
+    state: enabled
+- name: qtgui_freq_sink_x_0
+  id: qtgui_freq_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'True'
+    average: '1.0'
+    axislabels: 'True'
+    bw: samp_rate
+    color1: '"blue"'
+    color10: '"dark blue"'
+    color2: '"red"'
+    color3: '"green"'
+    color4: '"black"'
+    color5: '"cyan"'
+    color6: '"magenta"'
+    color7: '"yellow"'
+    color8: '"dark red"'
+    color9: '"dark green"'
+    comment: Check that the signal is present at the expected frequency
+    ctrlpanel: 'False'
+    fc: center_freq
+    fftsize: '1024'
+    freqhalf: 'True'
+    grid: 'True'
+    gui_hint: 2,0,1,3
+    label: ''
+    label1: ''
+    label10: ''''''
+    label2: ''''''
+    label3: ''''''
+    label4: ''''''
+    label5: ''''''
+    label6: ''''''
+    label7: ''''''
+    label8: ''''''
+    label9: ''''''
+    legend: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    name: Received Spectrum
+    nconnections: '1'
+    norm_window: 'False'
+    showports: 'False'
+    tr_chan: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_tag: '""'
+    type: complex
+    units: dB
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    wintype: window.WIN_BLACKMAN_hARRIS
+    ymax: '10'
+    ymin: '-140'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [320, 500]
+    rotation: 0
+    state: enabled
+- name: qtgui_time_sink_x_0
+  id: qtgui_time_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    autoscale: 'True'
+    axislabels: 'True'
+    color1: blue
+    color10: dark blue
+    color2: red
+    color3: green
+    color4: black
+    color5: cyan
+    color6: magenta
+    color7: yellow
+    color8: dark red
+    color9: dark green
+    comment: Real part should jump cleanly between -1 and +1
+    ctrlpanel: 'False'
+    entags: 'True'
+    grid: 'True'
+    gui_hint: 1,2,1,1
+    label1: I (real)
+    label10: Signal 10
+    label2: Q (imag)
+    label3: Signal 3
+    label4: Signal 4
+    label5: Signal 5
+    label6: Signal 6
+    label7: Signal 7
+    label8: Signal 8
+    label9: Signal 9
+    legend: 'True'
+    marker1: '-1'
+    marker10: '-1'
+    marker2: '-1'
+    marker3: '-1'
+    marker4: '-1'
+    marker5: '-1'
+    marker6: '-1'
+    marker7: '-1'
+    marker8: '-1'
+    marker9: '-1'
+    name: Synchronized Symbols
+    nconnections: '1'
+    size: '200'
+    srate: symbol_rate
+    stemplot: 'False'
+    style1: '1'
+    style10: '1'
+    style2: '1'
+    style3: '1'
+    style4: '1'
+    style5: '1'
+    style6: '1'
+    style7: '1'
+    style8: '1'
+    style9: '1'
+    tr_chan: '0'
+    tr_delay: '0'
+    tr_level: '0.0'
+    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_slope: qtgui.TRIG_SLOPE_POS
+    tr_tag: '""'
+    type: complex
+    update_time: '0.10'
+    width1: '1'
+    width10: '1'
+    width2: '1'
+    width3: '1'
+    width4: '1'
+    width5: '1'
+    width6: '1'
+    width7: '1'
+    width8: '1'
+    width9: '1'
+    ylabel: Amplitude
+    ymax: '2'
+    ymin: '-2'
+    yunit: '""'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1024, 456.0]
+    rotation: 0
+    state: enabled
 - name: soapy_plutosdr_source_0
   id: soapy_plutosdr_source
   parameters:
+    affinity: ''
+    agc: 'False'
+    alias: ''
     bandwidth: samp_rate
     center_freq: center_freq
-    comment: 'Receives RF, outputs complex IQ at sample rate'
-    dev_args: ''
+    comment: Receives RF, outputs complex IQ at sample rate
+    dev_args: device='plutosdr'
     gain: rx_gain
     maxoutbuf: '0'
     minoutbuf: '0'
@@ -194,278 +540,13 @@ blocks:
     rotation: 0
     state: enabled
 
-# AGC: normalizes signal amplitude to 1.0.
-# rate=1e-4 means slow adaptation (averages over ~10k samples)
-# so it doesn't track individual symbol transitions.
-- name: analog_agc_xx_0
-  id: analog_agc_xx
-  parameters:
-    comment: 'Normalizes amplitude to 1.0 for consistent sync performance'
-    gain: '1.0'
-    max_gain: '65536'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    rate: 1e-4
-    reference: '1.0'
-    type: cc
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [320, 228]
-    rotation: 0
-    state: enabled
-
-# Costas Loop: corrects frequency and phase offset between
-# TX and RX oscillators.  Order=2 for BPSK.
-# After this block, the BPSK points should sit on the real axis.
-- name: digital_costas_loop_cc_0
-  id: digital_costas_loop_cc
-  parameters:
-    comment: 'Removes freq/phase offset. Order=2 for BPSK.'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    order: '2'
-    use_snr: 'False'
-    w: costas_bw
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [560, 236]
-    rotation: 0
-    state: enabled
-
-# Symbol Sync with Mueller & Mueller TED: finds the optimal
-# sampling instant within each symbol period.
-# Input:  25 samples/symbol (from the transmitter's repeat block)
-# Output: 1 sample/symbol (ready for detection)
-#
-# The M&M TED computes:
-#   e(n) = Re{ x̂(n-1)·y(n) - x̂(n)·y(n-1) }
-# This error drives a loop that adjusts the sampling phase.
-- name: digital_symbol_sync_xx_0
-  id: digital_symbol_sync_xx
-  parameters:
-    comment: 'Mueller & Mueller clock recovery. Outputs 1 sample/symbol.'
-    constellation: digital.constellation_bpsk().base()
-    damping: '1.0'
-    loop_bw: clock_bw
-    max_dev: '1.5'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    nfilters: '128'
-    osps: '1'
-    resamp_type: digital.IR_MMSE_8TAP
-    sps: sps
-    sub_type: '''cc'''
-    ted_gain: '1.0'
-    ted_type: digital.TED_MUELLER_AND_MULLER
-    type: cc
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [560, 380]
-    rotation: 0
-    state: enabled
-
-# ═══════════════════════════════════════════════════════════════
-#  OUTPUT FILE SINKS
-# ═══════════════════════════════════════════════════════════════
-
-# Saves synchronized symbols (1 per symbol period) as complex64.
-# This is the main output — feed it to MMSE or DEFINED.
-# Load in Python:
-#   symbols = np.fromfile("received_symbols.bin", dtype=np.complex64)
-- name: blocks_file_sink_symbols
-  id: blocks_file_sink
-  parameters:
-    append: 'False'
-    comment: 'Output: 1 complex sample per symbol, ready for detection'
-    file: received_symbols.bin
-    type: complex
-    unbuffered: 'False'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [832, 388]
-    rotation: 0
-    state: enabled
-
-# Saves raw IQ (before sync) for debugging.
-- name: blocks_file_sink_raw
-  id: blocks_file_sink
-  parameters:
-    append: 'False'
-    comment: 'Raw IQ before any synchronization (for debugging)'
-    file: received_iq_raw.bin
-    type: complex
-    unbuffered: 'False'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [320, 388]
-    rotation: 0
-    state: enabled
-
-# ═══════════════════════════════════════════════════════════════
-#  GUI DISPLAYS
-# ═══════════════════════════════════════════════════════════════
-
-# Constellation display: shows the received symbols after all
-# synchronization.  For good BPSK, you should see two tight
-# clusters at -1 and +1 on the horizontal axis.
-- name: qtgui_const_sink_x_0
-  id: qtgui_const_sink_x
-  parameters:
-    autoscale: 'False'
-    axislabels: 'True'
-    comment: 'Should show two clusters at ±1 on real axis for BPSK'
-    grid: 'True'
-    gui_hint: 1,0,1,2
-    label1: ''
-    legend: 'True'
-    marker1: '0'
-    name: After Clock Recovery
-    nconnections: '1'
-    size: '1024'
-    style1: '0'
-    tr_chan: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_slope: qtgui.TRIG_SLOPE_POS
-    tr_tag: '""'
-    type: complex
-    update_time: '0.10'
-    width1: '1'
-    xmax: '2'
-    xmin: '-2'
-    ymax: '2'
-    ymin: '-2'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [832, 484]
-    rotation: 0
-    state: enabled
-
-# Time domain: shows the real part of synchronized symbols.
-# Should look like a clean rectangular wave between -1 and +1.
-- name: qtgui_time_sink_x_0
-  id: qtgui_time_sink_x
-  parameters:
-    autoscale: 'True'
-    axislabels: 'True'
-    comment: 'Real part should jump cleanly between -1 and +1'
-    ctrlpanel: 'False'
-    entags: 'True'
-    grid: 'True'
-    gui_hint: 1,2,1,1
-    label1: I (real)
-    label2: Q (imag)
-    legend: 'True'
-    marker1: '-1'
-    marker2: '-1'
-    name: Synchronized Symbols
-    nconnections: '1'
-    size: '200'
-    srate: symbol_rate
-    stemplot: 'False'
-    style1: '1'
-    style2: '1'
-    tr_chan: '0'
-    tr_delay: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_slope: qtgui.TRIG_SLOPE_POS
-    tr_tag: '""'
-    type: complex
-    update_time: '0.10'
-    width1: '1'
-    width2: '1'
-    ylabel: Amplitude
-    ymax: '2'
-    ymin: '-2'
-    yunit: '""'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [832, 596]
-    rotation: 0
-    state: enabled
-
-# Spectrum: shows the received RF spectrum.
-# Verify the signal is present and centered correctly.
-- name: qtgui_freq_sink_x_0
-  id: qtgui_freq_sink_x
-  parameters:
-    autoscale: 'True'
-    average: '1.0'
-    axislabels: 'True'
-    bw: samp_rate
-    comment: 'Check that the signal is present at the expected frequency'
-    ctrlpanel: 'False'
-    fc: center_freq
-    fftsize: '1024'
-    freqhalf: 'True'
-    grid: 'True'
-    gui_hint: 2,0,1,3
-    label: ''
-    legend: 'True'
-    maxhold: 'False'
-    name: Received Spectrum
-    nconnections: '1'
-    norm_window: 'False'
-    showports: 'False'
-    tr_chan: '0'
-    tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
-    tr_tag: '""'
-    type: complex
-    units: dB
-    update_time: '0.10'
-    width1: '1'
-    wintype: window.WIN_BLACKMAN_hARRIS
-    ymax: '10'
-    ymin: '-140'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [320, 500]
-    rotation: 0
-    state: enabled
-
-# ═══════════════════════════════════════════════════════════════
-#  CONNECTIONS
-# ═══════════════════════════════════════════════════════════════
-#
-#  Signal chain:
-#    PlutoSDR → AGC → Costas Loop → M&M Clock Recovery → file + displays
-#
-#  Also:
-#    PlutoSDR → raw file sink (debugging)
-#    PlutoSDR → spectrum display (verify signal presence)
-
 connections:
-# Main signal chain
-- [soapy_plutosdr_source_0, '0', analog_agc_xx_0, '0']
 - [analog_agc_xx_0, '0', digital_costas_loop_cc_0, '0']
 - [digital_costas_loop_cc_0, '0', digital_symbol_sync_xx_0, '0']
-
-# Clock recovery output → file and displays
 - [digital_symbol_sync_xx_0, '0', blocks_file_sink_symbols, '0']
 - [digital_symbol_sync_xx_0, '0', qtgui_const_sink_x_0, '0']
 - [digital_symbol_sync_xx_0, '0', qtgui_time_sink_x_0, '0']
-
-# Raw IQ → file and spectrum display
+- [soapy_plutosdr_source_0, '0', analog_agc_xx_0, '0']
 - [soapy_plutosdr_source_0, '0', blocks_file_sink_raw, '0']
 - [soapy_plutosdr_source_0, '0', qtgui_freq_sink_x_0, '0']
 
