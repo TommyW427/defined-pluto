@@ -64,11 +64,11 @@ class Send_Signal(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.symbol_rate = symbol_rate = 10000
-        self.samp_rate = samp_rate = 250000
+        self.symbol_rate = symbol_rate = 40000
+        self.samp_rate = samp_rate = 1000000
         self.sps = sps = int(samp_rate // symbol_rate)
         self.center_freq = center_freq = 915e6
-        self.bit_file = bit_file = "bit_tests/bits_000.bin"
+        self.bit_file = bit_file = "full_frames/frame_0000.bin"
 
         ##################################################
         # Blocks
@@ -78,10 +78,10 @@ class Send_Signal(gr.top_block, Qt.QWidget):
         dev = 'driver=plutosdr'
         stream_args = ''
         tune_args = ['']
-        settings = ['']
+        settings_list = ['']
 
         self.soapy_plutosdr_sink_0 = soapy.sink(dev, "fc32", 1, '',
-                                  stream_args, tune_args, settings)
+                                  stream_args, tune_args, settings_list)
         self.soapy_plutosdr_sink_0.set_sample_rate(0, samp_rate)
         self.soapy_plutosdr_sink_0.set_bandwidth(0, samp_rate)
         self.soapy_plutosdr_sink_0.set_frequency(0, center_freq)
