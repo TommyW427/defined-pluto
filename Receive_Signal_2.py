@@ -104,6 +104,7 @@
 #
 
 from PyQt5 import Qt
+from PyQt5 import QtCore
 from gnuradio import qtgui
 from gnuradio import analog
 from gnuradio import blocks
@@ -117,6 +118,7 @@ from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
 from gnuradio import soapy
+import sip
 import threading
 
 
@@ -169,19 +171,19 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
 
-        # Sample rate: must match the transmitter (250 kHz)
-        self.samp_rate = samp_rate = 250000
+        # Sample rate: must match the transmitter (1 MHz)
+        self.samp_rate = samp_rate = 1000000
 
         # Center frequency: must match the transmitter (915 MHz)
         self.center_freq = center_freq = 915e6
 
-        # Symbol rate: must match the transmitter (10 kHz)
+        # Symbol rate: must match the transmitter (40 kHz)
         # The transmitter sends each BPSK symbol for sps=25 samples.
-        self.symbol_rate = symbol_rate = 10000
+        self.symbol_rate = symbol_rate = 40000
 
         # Samples per symbol: how many raw IQ samples make up one symbol.
         # The transmitter's repeat block uses this same value.
-        # sps = 250,000 / 10,000 = 25
+        # sps = 1,000,000 / 40,000 = 25
         self.sps = sps = int(samp_rate // symbol_rate)
 
         # Receiver gain in dB.  Adjustable via GUI slider.
@@ -212,7 +214,7 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         self._rx_gain_range = qtgui.Range(0, 73, 1, rx_gain, 200)
         self._rx_gain_win = qtgui.RangeWidget(
             self._rx_gain_range, self.set_rx_gain, "RX Gain (dB)",
-            "counter_slider", float, QtCore=Qt.QtCore
+            "counter_slider", float, QtCore.Qt.Horizontal
         )
         self.top_grid_layout.addWidget(self._rx_gain_win, 0, 0, 1, 1)
 
@@ -220,7 +222,7 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         self._costas_bw_range = qtgui.Range(0.001, 0.2, 0.001, costas_bw, 200)
         self._costas_bw_win = qtgui.RangeWidget(
             self._costas_bw_range, self.set_costas_bw, "Costas Loop BW",
-            "counter_slider", float, QtCore=Qt.QtCore
+            "counter_slider", float, QtCore.Qt.Horizontal
         )
         self.top_grid_layout.addWidget(self._costas_bw_win, 0, 1, 1, 1)
 
@@ -228,7 +230,7 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         self._clock_bw_range = qtgui.Range(0.001, 0.2, 0.001, clock_bw, 200)
         self._clock_bw_win = qtgui.RangeWidget(
             self._clock_bw_range, self.set_clock_bw, "Clock Recovery BW",
-            "counter_slider", float, QtCore=Qt.QtCore
+            "counter_slider", float, QtCore.Qt.Horizontal
         )
         self.top_grid_layout.addWidget(self._clock_bw_win, 0, 2, 1, 1)
 
@@ -241,11 +243,12 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         settings_list = ['']
 
         self.soapy_plutosdr_source_0 = soapy.source(
-            dev, "fc32", 1, '',
+            dev, "fc32", 1, "",
             stream_args, tune_args, settings_list
         )
         self.soapy_plutosdr_source_0.set_sample_rate(0, samp_rate)
         self.soapy_plutosdr_source_0.set_bandwidth(0, samp_rate)
+        self.soapy_plutosdr_source_0.set_gain_mode(0, False)
         self.soapy_plutosdr_source_0.set_frequency(0, center_freq)
         self.soapy_plutosdr_source_0.set_gain(0, min(max(rx_gain, 0.0), 73.0))
 
@@ -260,12 +263,7 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         #   reference=1.0 : target output amplitude
         #   gain=1.0 : initial gain before adaptation starts
         #   max_gain=65536 : upper limit on the AGC gain (safety limit)
-        self.analog_agc_cc_0 = analog.agc_cc(
-            rate=1e-4,
-            reference=1.0,
-            gain=1.0,
-            max_gain=65536
-        )
+        self.analog_agc_xx_0 = analog.agc_cc((1e-4), 1.0, 1.0, 65536)
 
         # ── Costas Loop (Frequency + Phase Synchronization) ─────
         # Removes frequency offset and phase offset between the
@@ -318,7 +316,7 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         #   resamp_type : interpolation filter type
         #                 IR_MMSE_8TAP = minimum mean square error
         #                 8-tap interpolator (good quality)
-        self.digital_symbol_sync_cc_0 = digital.symbol_sync_cc(
+        self.digital_symbol_sync_xx_0 = digital.symbol_sync_cc(
             digital.TED_MUELLER_AND_MULLER,  # timing error detector type
             sps,                             # input samples per symbol
             clock_bw,                        # loop bandwidth
@@ -378,7 +376,11 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         self.qtgui_const_sink_x_0.set_trigger_mode(
             qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, ""
         )
-        self.top_grid_layout.addWidget(self.qtgui_const_sink_x_0.qwidget(), 1, 0, 1, 2)
+        self.qtgui_const_sink_x_0.enable_autoscale(False)
+        self.qtgui_const_sink_x_0.enable_grid(True)
+        self.qtgui_const_sink_x_0.enable_axis_labels(True)
+        self._qtgui_const_sink_x_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0.qwidget(), Qt.QWidget)
+        self.top_grid_layout.addWidget(self._qtgui_const_sink_x_0_win, 1, 0, 1, 2)
 
         # ── GUI: Time domain display (after clock recovery) ─────
         # Shows the real part of the synchronized symbols over time.
@@ -393,10 +395,18 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         )
         self.qtgui_time_sink_x_0.set_update_time(0.10)
         self.qtgui_time_sink_x_0.set_y_axis(-2, 2)
+        self.qtgui_time_sink_x_0.set_y_label('Amplitude', "")
+        self.qtgui_time_sink_x_0.enable_tags(True)
         self.qtgui_time_sink_x_0.set_trigger_mode(
-            qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, ""
+            qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, ""
         )
-        self.top_grid_layout.addWidget(self.qtgui_time_sink_x_0.qwidget(), 1, 2, 1, 1)
+        self.qtgui_time_sink_x_0.enable_autoscale(True)
+        self.qtgui_time_sink_x_0.enable_grid(True)
+        self.qtgui_time_sink_x_0.enable_axis_labels(True)
+        self.qtgui_time_sink_x_0.enable_control_panel(False)
+        self.qtgui_time_sink_x_0.enable_stem_plot(False)
+        self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
+        self.top_grid_layout.addWidget(self._qtgui_time_sink_x_0_win, 1, 2, 1, 1)
 
         # ── GUI: Frequency display (before sync, for diagnostics) ──
         # Shows the RF spectrum to verify the signal is present
@@ -412,7 +422,16 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
         )
         self.qtgui_freq_sink_x_0.set_update_time(0.10)
         self.qtgui_freq_sink_x_0.set_y_axis(-140, 10)
-        self.top_grid_layout.addWidget(self.qtgui_freq_sink_x_0.qwidget(), 2, 0, 1, 3)
+        self.qtgui_freq_sink_x_0.set_y_label('', 'dB')
+        self.qtgui_freq_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, 0.0, 0, "")
+        self.qtgui_freq_sink_x_0.enable_autoscale(True)
+        self.qtgui_freq_sink_x_0.enable_grid(True)
+        self.qtgui_freq_sink_x_0.set_fft_average(1.0)
+        self.qtgui_freq_sink_x_0.enable_axis_labels(True)
+        self.qtgui_freq_sink_x_0.enable_control_panel(False)
+        self.qtgui_freq_sink_x_0.set_fft_window_normalized(False)
+        self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.qwidget(), Qt.QWidget)
+        self.top_grid_layout.addWidget(self._qtgui_freq_sink_x_0_win, 2, 0, 1, 3)
 
         ##################################################
         # Connections
@@ -428,22 +447,22 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
 
         # PlutoSDR → AGC → Costas loop → Clock recovery
         self.connect((self.soapy_plutosdr_source_0, 0),
-                     (self.analog_agc_cc_0, 0))
-        self.connect((self.analog_agc_cc_0, 0),
+                     (self.analog_agc_xx_0, 0))
+        self.connect((self.analog_agc_xx_0, 0),
                      (self.digital_costas_loop_cc_0, 0))
         self.connect((self.digital_costas_loop_cc_0, 0),
-                     (self.digital_symbol_sync_cc_0, 0))
+                     (self.digital_symbol_sync_xx_0, 0))
 
         # Clock recovery → symbol file sink
-        self.connect((self.digital_symbol_sync_cc_0, 0),
+        self.connect((self.digital_symbol_sync_xx_0, 0),
                      (self.blocks_file_sink_symbols, 0))
 
         # Clock recovery → constellation display
-        self.connect((self.digital_symbol_sync_cc_0, 0),
+        self.connect((self.digital_symbol_sync_xx_0, 0),
                      (self.qtgui_const_sink_x_0, 0))
 
         # Clock recovery → time domain display
-        self.connect((self.digital_symbol_sync_cc_0, 0),
+        self.connect((self.digital_symbol_sync_xx_0, 0),
                      (self.qtgui_time_sink_x_0, 0))
 
     def closeEvent(self, event):
@@ -475,7 +494,7 @@ class Receive_Signal(gr.top_block, Qt.QWidget):
 
     def set_clock_bw(self, clock_bw):
         self.clock_bw = clock_bw
-        self.digital_symbol_sync_cc_0.set_loop_bandwidth(clock_bw)
+        self.digital_symbol_sync_xx_0.set_loop_bandwidth(clock_bw)
 
     def get_samp_rate(self):
         return self.samp_rate
