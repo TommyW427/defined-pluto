@@ -10,6 +10,17 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # ============================================================
+# CONTEXT LENGTH SETUP
+# ============================================================
+MIN_CONTEXT_K = 1
+MAX_CONTEXT_K = 30
+
+
+def sample_context_length(min_k=MIN_CONTEXT_K, max_k=MAX_CONTEXT_K):
+    return int(torch.randint(min_k, max_k + 1, (1,), device=device).item())
+
+
+# ============================================================
 # SAME CHANNEL MODEL
 # ============================================================
 def generate_batch(batch_size=256, T=31):
@@ -82,7 +93,7 @@ def build_prompt(y, x_ctx, k, t):
 def icl_step():
     y, x = generate_batch()
 
-    k = 1
+    k = sample_context_length()
     loss = 0
 
     for t in range(k, x.shape[1]):
@@ -105,7 +116,7 @@ def icl_step():
 def defined_step():
     y, x = generate_batch()
 
-    k = 1
+    k = sample_context_length()
     feedback = x.clone()
 
     loss_icl = 0
@@ -158,10 +169,9 @@ for i in range(1500):
 # DEFINED INFERENCE (sequential feedback loop)
 # ============================================================
 @torch.no_grad()
-def evaluate_defined():
+def evaluate_defined(k=MIN_CONTEXT_K):
     y, x = generate_batch(batch_size=512)
 
-    k = 1
     feedback = x.clone()
 
     errors = 0
@@ -181,3 +191,34 @@ def evaluate_defined():
 
 
 print("DEFINED SER:", evaluate_defined())
+
+
+# ============================================================
+# SER SWEEP OVER CONTEXT LENGTH
+# ============================================================
+@torch.no_grad()
+def evaluate_defined_sweep(k_values=None):
+    if k_values is None:
+        k_values = list(range(MIN_CONTEXT_K, MAX_CONTEXT_K + 1))
+
+    results = []
+    for k in k_values:
+        ser = evaluate_defined(k=k)
+        results.append(ser)
+        print(f"k={k}, SER={ser:.6f}")
+
+    return k_values, results
+
+
+k_values, ser_values = evaluate_defined_sweep()
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 6))
+plt.plot(k_values, ser_values, marker='o', linestyle='-')
+plt.title('SER vs. Context Length (k) for DEFINED Model')
+plt.xlabel('Context Length (k)')
+plt.ylabel('Symbol Error Rate (SER)')
+plt.grid(True)
+plt.xticks(k_values)
+plt.show()

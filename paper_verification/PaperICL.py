@@ -10,6 +10,17 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # ============================================================
+# CONTEXT LENGTH SETUP
+# ============================================================
+MIN_CONTEXT_K = 1
+MAX_CONTEXT_K = 30
+
+
+def sample_context_length(min_k=MIN_CONTEXT_K, max_k=MAX_CONTEXT_K):
+    return int(torch.randint(min_k, max_k + 1, (1,), device=device).item())
+
+
+# ============================================================
 # CONSTELLATION (BPSK default)
 # ============================================================
 def get_constellation():
@@ -89,7 +100,7 @@ opt = torch.optim.Adam(model.parameters(), lr=1e-4)
 def train_step():
     y, x = generate_batch()
 
-    k = 4
+    k = sample_context_length()
     loss = 0
 
     for t in range(k, x.shape[1]):

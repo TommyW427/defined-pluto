@@ -1,5 +1,22 @@
 # PaperICL vs Toy: Comprehensive Comparison
 
+## Quick Reference (Most Important Differences)
+
+| Topic | PaperICL | Toy Colab |
+|---|---|---|
+| Core framing | Vanilla ICL baseline | Simplified toy ICL demo |
+| Channel realism | Rayleigh block fading, random per batch | Biased Gaussian-style channel around nonzero mean |
+| SNR control | Explicit via `snr_db = 10` and normalized noise | Implicit via fixed `noise = 0.1 * (...)` |
+| Input features | 3D: `[Re(y), Im(y), x_ctx]` | 5D with explicit pilot marker fields |
+| Prompt strategy | Sliding `(k+1)` prompt for each target `t` | Full-sequence input in one pass |
+| Learning target | Classification (2 logits, cross-entropy) | Regression (1 scalar, masked MSE) |
+| Train focus | Samples `k` during training and predicts symbols from clean context windows | Trains all positions, masks pilot loss |
+| Default scale | Larger (`batch=256`, `T=31`, 2000 steps) | Smaller (`batch=32`, `T=16`, 500 steps) |
+| Evaluation | SER over large batch (quantitative) | Single-sample sign check (qualitative) |
+| Expected strength | Better research rigor and generalization testing | Faster intuition/prototyping and readability |
+
+Use this table as a quick scan, then use the detailed sections below for full block-by-block notes.
+
 ## 1. CONSTELLATION
 
 ### PaperICL.py
@@ -74,7 +91,7 @@ def generate_batch(batch_size=32, T=16, k=4):
 | **Noise normalization** | $\sigma = \sqrt{1/\text{SNR}} / \sqrt{2}$ (proper) | Fixed factor (0.1) |
 | **Realism** | Higher (random fading each batch) | Lower (deterministic, biased channel) |
 
-**Key insight**: PaperICL tests generalization across random channel realizations; Toy always sees a similar biased channel, easier to fit but less generalizable.
+**Key insight**: PaperICL now tests generalization across both random channel realizations and variable context lengths during training; Toy still sees a similar biased channel, which is easier to fit but less generalizable.
 
 ---
 
@@ -209,7 +226,7 @@ opt = torch.optim.Adam(model.parameters(), lr=1e-4)
 def train_step():
     y, x = generate_batch()
     
-    k = 4
+    k = sample_context_length()
     loss = 0
     
     # Predict all data symbols t ∈ [k, T)
@@ -323,6 +340,8 @@ print("Pred: ", torch.sign(pred[0]))
 - PaperICL: **Rigorous** (batch-level SER metric, repeatable)
 - Toy: **Interpretable** (shows exact symbol predictions) but not statistically significant
 
+Because PaperICL samples `k` during training now, the SER-vs-`k` sweep is a more meaningful generalization check instead of just a train/test mismatch artifact.
+
 ---
 
 ## Summary Table
@@ -356,5 +375,5 @@ print("Pred: ", torch.sign(pred[0]))
 - ✅ More interpretable single-example output
 
 **Recommendation for your use:**
-- For **publication/research**: Start from PaperICL structure, add explicit pilot markers (best of both)
+- For **publication/research**: Use PaperICL as the base, and keep the variable-`k` training if you want to study context-length robustness
 - For **prototyping/teaching**: Toy is clearer; extend to batch evaluation
