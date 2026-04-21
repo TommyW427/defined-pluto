@@ -155,7 +155,7 @@ print("ICL SER:", evaluate())
 
 import matplotlib.pyplot as plt
 
-k_values = list(range(1, 30))  # Test k from 1 to 9
+k_values = list(range(1, 31))  # Test k from 1 to 30
 ser_results = []
 
 print("Evaluating SER for different k values...")

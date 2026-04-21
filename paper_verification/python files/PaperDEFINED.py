@@ -73,16 +73,18 @@ opt = torch.optim.Adam(model.parameters(), lr=1e-4)
 # ============================================================
 # PROMPT BUILDER (USED FOR BOTH ICL + DF)
 # ============================================================
-def build_prompt(y, x_ctx, k, t):
+def build_prompt(y, x_ctx, t):
     B = y.shape[0]
-    feat = torch.zeros(B, k + 1, 3, device=device)
+    feat = torch.zeros(B, t + 1, 3, device=device)
 
-    feat[:, :k, 0] = y[:, :k].real
-    feat[:, :k, 1] = y[:, :k].imag
-    feat[:, :k, 2] = x_ctx[:, :k].float()
+    # Context uses all past pairs (0..t-1), which enables true decision feedback.
+    feat[:, :t, 0] = y[:, :t].real
+    feat[:, :t, 1] = y[:, :t].imag
+    feat[:, :t, 2] = x_ctx[:, :t].float()
 
-    feat[:, k, 0] = y[:, t].real
-    feat[:, k, 1] = y[:, t].imag
+    # Query token includes y_t only; x_t remains unknown for prediction.
+    feat[:, t, 0] = y[:, t].real
+    feat[:, t, 1] = y[:, t].imag
 
     return feat
 
@@ -97,7 +99,7 @@ def icl_step():
     loss = 0
 
     for t in range(k, x.shape[1]):
-        prompt = build_prompt(y, x, k, t)
+        prompt = build_prompt(y, x, t)
         logits = model(prompt)[:, -1, :]
         loss = loss + F.cross_entropy(logits, x[:, t])
 
@@ -118,13 +120,14 @@ def defined_step():
 
     k = sample_context_length()
     feedback = x.clone()
+    feedback[:, k:] = 0
 
     loss_icl = 0
     loss_df = 0
 
     # ICL loss (clean)
     for t in range(k, x.shape[1]):
-        prompt = build_prompt(y, x, k, t)
+        prompt = build_prompt(y, x, t)
         logits = model(prompt)[:, -1, :]
         loss_icl += F.cross_entropy(logits, x[:, t])
 
@@ -132,7 +135,7 @@ def defined_step():
 
     # DF loss (with self-feedback)
     for t in range(k, x.shape[1]):
-        prompt = build_prompt(y, feedback, k, t)
+        prompt = build_prompt(y, feedback, t)
         logits = model(prompt)[:, -1, :]
 
         pred = logits.argmax(-1)
@@ -173,12 +176,13 @@ def evaluate_defined(k=MIN_CONTEXT_K):
     y, x = generate_batch(batch_size=512)
 
     feedback = x.clone()
+    feedback[:, k:] = 0
 
     errors = 0
     total = 0
 
     for t in range(k, x.shape[1]):
-        prompt = build_prompt(y, feedback, k, t)
+        prompt = build_prompt(y, feedback, t)
         logits = model(prompt)[:, -1, :]
         pred = logits.argmax(-1)
 
